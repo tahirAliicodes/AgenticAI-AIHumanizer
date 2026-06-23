@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Humanizer Platform</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0d0d0d;
+      color: #e8e8e8;
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ── Header ── */
+    header {
+      width: 100%;
+      background: #111;
+      border-bottom: 1px solid #222;
+      padding: 18px 40px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .logo {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    header h1 { font-size: 20px; font-weight: 600; color: #fff; }
+    header span { font-size: 13px; color: #555; margin-left: 4px; }
+
+    /* ── Main card ── */
+    .card {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 16px;
+      padding: 40px;
+      width: 100%;
+      max-width: 700px;
+      margin-top: 48px;
+    }
+    .card h2 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+    .card p  { font-size: 14px; color: #666; margin-bottom: 28px; }
+
+    /* ── Drop zone ── */
+    .dropzone {
+      border: 2px dashed #2a2a2a;
+      border-radius: 12px;
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .dropzone:hover, .dropzone.dragover {
+      border-color: #7c3aed;
+      background: #14101f;
+    }
+    .dropzone input[type="file"] {
+      position: absolute; inset: 0;
+      opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .dropzone .icon { font-size: 40px; margin-bottom: 12px; }
+    .dropzone .label { font-size: 15px; color: #aaa; }
+    .dropzone .sublabel { font-size: 12px; color: #444; margin-top: 6px; }
+    .dropzone .filename {
+      margin-top: 12px; font-size: 13px;
+      color: #7c3aed; font-weight: 500;
+    }
+
+    /* ── Button ── */
+    .btn {
+      width: 100%; padding: 14px;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      color: #fff; border: none; border-radius: 10px;
+      font-size: 15px; font-weight: 600;
+      cursor: pointer; margin-top: 20px;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.88; }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* ── Progress section ── */
+    .progress-section {
+      margin-top: 28px;
+      display: none;
+    }
+    .progress-section.visible { display: block; }
+
+    .status-text {
+      font-size: 13px; color: #888;
+      margin-bottom: 10px;
+    }
+    .progress-bar-bg {
+      background: #1a1a1a;
+      border-radius: 99px;
+      height: 8px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #7c3aed, #4f46e5);
+      border-radius: 99px;
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+    .chunk-counter {
+      font-size: 12px; color: #444;
+      margin-top: 8px; text-align: right;
+    }
+
+    /* ── Download box ── */
+    .download-box {
+      margin-top: 28px;
+      background: #0d1f0f;
+      border: 1px solid #1a3d1e;
+      border-radius: 12px;
+      padding: 20px 24px;
+      display: none;
+      align-items: center;
+      gap: 16px;
+    }
+    .download-box.visible { display: flex; }
+    .download-box .dl-icon { font-size: 28px; }
+    .download-box .dl-text { flex: 1; }
+    .download-box .dl-text strong { display: block; color: #4ade80; font-size: 14px; }
+    .download-box .dl-text span  { font-size: 12px; color: #555; }
+    .download-btn {
+      background: #14532d;
+      color: #4ade80;
+      border: 1px solid #166534;
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; text-decoration: none;
+    }
+    .download-btn:hover { background: #166534; }
+
+    /* ── Error box ── */
+    .error-box {
+      margin-top: 20px;
+      background: #1f0d0d;
+      border: 1px solid #3d1a1a;
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 13px; color: #f87171;
+      display: none;
+    }
+    .error-box.visible { display: block; }
+
+    /* ── Footer ── */
+    footer {
+      margin-top: 48px;
+      font-size: 12px; color: #333;
+      padding-bottom: 32px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">✦</div>
+  <h1>AI Humanizer Platform</h1>
+  <span>Phase 1</span>
+</header>
+
+<div class="card">
+  <h2>Humanize Your Document</h2>
+  <p>Upload a .docx or .txt file — we'll rewrite it to sound naturally human using local AI.</p>
+
+  <!-- Drop zone -->
+  <div class="dropzone" id="dropzone">
+    <input type="file" id="fileInput" accept=".txt,.docx"/>
+    <div class="icon">📄</div>
+    <div class="label">Drop your file here or click to browse</div>
+    <div class="sublabel">Supports .txt and .docx files</div>
+    <div class="filename" id="filename"></div>
+  </div>
+
+  <!-- Humanize button -->
+  <button class="btn" id="humanizeBtn" disabled onclick="startHumanizing()">
+    ✦ Humanize Document
+  </button>
+
+  <!-- Progress -->
+  <div class="progress-section" id="progressSection">
+    <div class="status-text" id="statusText">Starting...</div>
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+    <div class="chunk-counter" id="chunkCounter"></div>
+  </div>
+
+  <!-- Download -->
+  <div class="download-box" id="downloadBox">
+    <div class="dl-icon">✅</div>
+    <div class="dl-text">
+      <strong>Humanization complete!</strong>
+      <span>Your document is ready to download</span>
+    </div>
+    <a class="download-btn" id="downloadBtn" href="#">Download</a>
+  </div>
+
+  <!-- Error -->
+  <div class="error-box" id="errorBox"></div>
+</div>
+
+<footer>Built with llama3.1 · Runs 100% locally · No data leaves your machine</footer>
+
+<script>
+  const fileInput     = document.getElementById('fileInput');
+  const filename      = document.getElementById('filename');
+  const humanizeBtn   = document.getElementById('humanizeBtn');
+  const progressSection = document.getElementById('progressSection');
+  const statusText    = document.getElementById('statusText');
+  const progressFill  = document.getElementById('progressFill');
+  const chunkCounter  = document.getElementById('chunkCounter');
+  const downloadBox   = document.getElementById('downloadBox');
+  const downloadBtn   = document.getElementById('downloadBtn');
+  const errorBox      = document.getElementById('errorBox');
+  const dropzone      = document.getElementById('dropzone');
+
+  // Show filename when file is picked
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) {
+      filename.textContent = '📎 ' + fileInput.files[0].name;
+      humanizeBtn.disabled = false;
+    }
+  });
+
+  // Drag and drop styling
+  dropzone.addEventListener('dragover',  (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+  dropzone.addEventListener('dragleave', ()  => dropzone.classList.remove('dragover'));
+  dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('dragover');
+    fileInput.files = e.dataTransfer.files;
+    fileInput.dispatchEvent(new Event('change'));
+  });
+
+  function reset() {
+    progressSection.classList.remove('visible');
+    downloadBox.classList.remove('visible');
+    errorBox.classList.remove('visible');
+    progressFill.style.width = '0%';
+    chunkCounter.textContent = '';
+  }
+
+  async function startHumanizing() {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    reset();
+    humanizeBtn.disabled = true;
+    progressSection.classList.add('visible');
+    statusText.textContent = 'Uploading...';
+
+    // Build form data
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // Open SSE stream from /humanize
+    const response = await fetch('/humanize', {
+      method: 'POST',
+      body: formData
+    });
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const text = decoder.decode(value);
+      const lines = text.split('\n').filter(l => l.startsWith('data:'));
+
+      for (const line of lines) {
+        const data = JSON.parse(line.replace('data: ', ''));
+
+        if (data.status === 'chunking') {
+          statusText.textContent = data.message;
+          progressFill.style.width = '5%';
+        }
+        else if (data.status === 'chunked') {
+          statusText.textContent = data.message;
+          progressFill.style.width = '10%';
+        }
+        else if (data.status === 'progress') {
+          const pct = 10 + ((data.current / data.total) * 85);
+          progressFill.style.width = pct + '%';
+          statusText.textContent = data.message;
+          chunkCounter.textContent = `${data.current} / ${data.total} chunks done`;
+        }
+        else if (data.status === 'assembling') {
+          statusText.textContent = data.message;
+          progressFill.style.width = '97%';
+        }
+        else if (data.status === 'done') {
+          progressFill.style.width = '100%';
+          statusText.textContent = '✦ Complete!';
+          chunkCounter.textContent = '';
+          downloadBtn.href = `/download/${data.filename}`;
+          downloadBtn.download = data.filename;
+          downloadBox.classList.add('visible');
+          humanizeBtn.disabled = false;
+        }
+        else if (data.status === 'error') {
+          errorBox.textContent = '❌ Error: ' + data.message;
+          errorBox.classList.add('visible');
+          humanizeBtn.disabled = false;
+        }
+      }
+    }
+  }
+</script>
+</body>
+</html>
